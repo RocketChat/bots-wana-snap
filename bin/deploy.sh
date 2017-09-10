@@ -21,17 +21,23 @@ launch=$(cat <<END
 # export RESPOND_TO_EDITED=true
 
 # Discord
-# export HUBOT_DISCORD_TOKEN
+# export HUBOT_DISCORD_TOKEN=""
 
 # HipChat
-# export HUBOT_HIPCHAT_JID
-# export HUBOT_HIPCHAT_PASSWORD
-# export HUBOT_HIPCHAT_ROOMS
+# export HUBOT_HIPCHAT_JID=""
+# export HUBOT_HIPCHAT_PASSWORD=""
+# export HUBOT_HIPCHAT_ROOMS=""
+
+# Mattermost
+# export MATTERMOST_GROUP=""
+# export MATTERMOST_HOST=""
+# export MATTERMOST_PASSWORD=""
+# export MATTERMOST_USER=""
 
 # Slack
-# export HUBOT_SLACK_TOKEN
+# export HUBOT_SLACK_TOKEN=""
 
-# One of: rocketchat, discord, hipchat, slack
+# One of: rocketchat, discord, hipchat, matteruser, slack
 adapter=""
 
 # The name to which this bot will respond

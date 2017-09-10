@@ -18,11 +18,13 @@ desired_packages=(
 "hubot-discord"
 "hubot-help"
 "hubot-hipchat"
+"hubot-matteruser"
 "hubot-redis-brain"
 "hubot-scripts"
 "hubot-seen"
 "hubot-slack"
 "hubot-trello"
+"mattermost-client"
 )
 
 # Install desired packages

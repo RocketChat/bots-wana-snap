@@ -7,6 +7,10 @@ function on_exit {
     unset HUBOT_HIPCHAT_ROOMS
     unset HUBOT_SLACK_TOKEN
     unset LISTEN_ON_ALL_PUBLIC
+    unset MATTERMOST_GROUP
+    unset MATTERMOST_HOST
+    unset MATTERMOST_PASSWORD
+    unset MATTERMOST_USER
     unset RESPOND_TO_DM
     unset RESPOND_TO_EDITED
     unset ROCKETCHAT_PASSWORD
@@ -23,7 +27,7 @@ check_authz
 PS3="> "
 
 echo "[?] What is your chat engine?"
-select engine in "Rocket.Chat" "Discord" "HipChat" "Slack"
+select engine in "Rocket.Chat" "Discord" "HipChat" "Mattermost" "Slack"
 do
     case ${engine} in
         Rocket.Chat)
@@ -34,6 +38,9 @@ do
             break;;
         HipChat)
             adapter="hipchat"
+            break;;
+        Mattermost)
+            adapter="matteruser"
             break;;
         Slack)
             adapter="slack"
@@ -64,6 +71,9 @@ do
             fi
             export HUBOT_HIPCHAT_JID=${bot_name}
             ;;
+        matteruser)
+            export MATTERMOST_USER=${bot_name}
+            ;;
     esac
 done
 printf "${bot_name}" > ${fname}
@@ -81,6 +91,11 @@ done
 printf ${engine_url} > ${fname}
 case ${adapter} in
     rocketchat) export ROCKETCHAT_URL=${engine_url};;
+    matteruser)
+        MATTERMOST_HOST=${engine_url/http:\/\//}
+        MATTERMOST_HOST=${MATTERMOST_HOST/https:\/\//}
+        export MATTERMOST_HOST
+        ;;
 esac
 bot_id=$(printf ${engine_url} | base64)
 
@@ -108,10 +123,10 @@ function exit_if_running {
 
 exit_if_running "[+] ${bot_name} is already running wild on ${engine}!"
 
-   password_mask=2#0001
-      token_mask=2#0010
- join_rooms_mask=2#0100
-#    unused_mask=2#1000
+  password_mask=2#0001
+     token_mask=2#0010
+join_rooms_mask=2#0100
+      team_mask=2#1000
 
 function set_config_options {
     selected_options=2#0000
@@ -127,6 +142,10 @@ function set_config_options {
             selected_options=$((${selected_options} | ${password_mask}))
             selected_options=$((${selected_options} | ${join_rooms_mask}))
             ;;
+        matteruser)
+            selected_options=$((${selected_options} | ${password_mask}))
+            selected_options=$((${selected_options} | ${team_mask}))
+            ;;
         slack)
             selected_options=$((${selected_options} | ${token_mask}))
             ;;
@@ -134,6 +153,22 @@ function set_config_options {
 }
 
 function set_variables {
+    if [[ $((${selected_options} & ${team_mask})) > 0 ]]
+    then
+        fname="${local_bot_dir}/.prev_team"
+        touch ${fname}
+        prev_team=$(cat "${fname}")
+        while [[ ! "${bot_team}" =~ ^[-_@.a-zA-Z0-9]{3,128}$ ]]
+        do
+            read -ei "${prev_team}" -p "[?] Which team should ${bot_name} join?
+> " bot_team
+        done
+        printf "${bot_team}" > ${fname}
+        case ${adapter} in
+            matteruser) export MATTERMOST_GROUP=${bot_team};;
+        esac
+    fi
+
     if [[ $((${selected_options} & ${token_mask})) > 0 ]]
     then
         read -p "[?] What is your ${engine} bot token?
@@ -154,6 +189,7 @@ function set_variables {
         case ${adapter} in
             rocketchat) export ROCKETCHAT_PASSWORD=${bot_password};;
             hipchat   ) export HUBOT_HIPCHAT_PASSWORD=${bot_password};;
+            matteruser) export MATTERMOST_PASSWORD=${bot_password};;
         esac
         unset bot_password
     fi
